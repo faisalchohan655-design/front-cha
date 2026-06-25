@@ -1,5 +1,5 @@
-import React, { useContext, useState, useMemo } from 'react';
-import { LeadsContext } from '../context/LeadsContext';
+import React, { useState, useMemo } from 'react';
+import { useLeads } from '../context/LeadsContext'; // ✅ CORRECT IMPORT
 import {
   Users, Search, Download, Trash2, Edit, Eye,
   Mail, Brain, Sparkles, Plus, X, Phone,
@@ -8,7 +8,9 @@ import {
 import * as XLSX from 'xlsx';
 
 const LeadManager = () => {
-  const { leads, loading, createLead, updateLead, deleteLead, bulkDeleteLeads } = useContext(LeadsContext);
+  // ✅ Using the custom hook
+  const { leads, loading, createLead, updateLead, deleteLead, bulkDeleteLeads } = useLeads();
+  
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
