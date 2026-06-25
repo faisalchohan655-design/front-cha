@@ -1,8 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LeadsProvider } from './context/LeadsContext'; // ✅ Named import
-// OR use default import:
-// import LeadsProvider from './context/LeadsContext';
+import { LeadsProvider } from './context/LeadsContext';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import LeadFinder from './pages/LeadFinder';
