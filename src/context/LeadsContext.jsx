@@ -1,10 +1,19 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
-// ✅ CORRECT EXPORT - Named export for context
-export const LeadsContext = createContext();
+// ===== CREATE CONTEXT =====
+const LeadsContext = createContext();
 
-// ✅ CORRECT EXPORT - Default export for provider
+// ===== CUSTOM HOOK =====
+export const useLeads = () => {
+  const context = useContext(LeadsContext);
+  if (!context) {
+    throw new Error('useLeads must be used within a LeadsProvider');
+  }
+  return context;
+};
+
+// ===== PROVIDER =====
 export const LeadsProvider = ({ children }) => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,7 +28,6 @@ export const LeadsProvider = ({ children }) => {
       setLeads(response.data.data || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
-      // Fallback mock data
       setLeads([
         { _id: '1', name: 'John Doe', company: 'Tech Corp', email: 'john@techcorp.com', phone: '+1 (555) 123-4567', status: 'new', source: 'google_maps', createdAt: new Date().toISOString() },
         { _id: '2', name: 'Sarah Smith', company: 'Finance Inc', email: 'sarah@financeinc.com', phone: '+1 (555) 234-5678', status: 'contacted', source: 'linkedin', createdAt: new Date().toISOString() },
@@ -143,5 +151,5 @@ export const LeadsProvider = ({ children }) => {
   );
 };
 
-// ✅ DEFAULT EXPORT for cleaner imports
+// ===== DEFAULT EXPORT =====
 export default LeadsProvider;
