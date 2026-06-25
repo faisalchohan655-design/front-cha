@@ -7,7 +7,7 @@ import {
 import * as XLSX from 'xlsx';
 
 const LeadManager = () => {
-  const { leads, deleteLead, bulkDeleteLeads } = useContext(LeadsContext);
+  const { leads, createLead, deleteLead, bulkDeleteLeads } = useContext(LeadsContext);
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -21,6 +21,7 @@ const LeadManager = () => {
     phone: '',
     status: 'new'
   });
+  const [loading, setLoading] = useState(false);
 
   const calculateAIScore = (lead) => {
     let score = 30;
@@ -96,11 +97,58 @@ const LeadManager = () => {
 
   const handleAddLead = async (e) => {
     e.preventDefault();
-    const { createLead } = useContext(LeadsContext);
-    await createLead(formData);
-    setShowAddModal(false);
-    setFormData({ name: '', company: '', email: '', phone: '', status: 'new' });
-    alert('Lead added successfully!');
+    
+    // Validation
+    if (!formData.name.trim()) {
+      alert('Please enter a name');
+      return;
+    }
+    if (!formData.email.trim()) {
+      alert('Please enter an email');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const newLead = {
+        name: formData.name,
+        company: formData.company || '',
+        email: formData.email,
+        phone: formData.phone || '',
+        status: formData.status,
+        source: 'manual'
+      };
+      
+      await createLead(newLead);
+      setShowAddModal(false);
+      setFormData({ name: '', company: '', email: '', phone: '', status: 'new' });
+      alert('✅ Lead added successfully!');
+    } catch (error) {
+      console.error('Error adding lead:', error);
+      alert('❌ Failed to add lead. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLeads.length === filteredLeads.length && filteredLeads.length > 0) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(filteredLeads.map(l => l._id));
+    }
+  };
+
+  const handleSingleSelect = (id) => {
+    if (selectedLeads.includes(id)) {
+      setSelectedLeads(selectedLeads.filter(leadId => leadId !== id));
+    } else {
+      setSelectedLeads([...selectedLeads, id]);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const getStatusBadge = (status) => {
@@ -121,26 +169,6 @@ const LeadManager = () => {
     { id: 'proposal', label: 'Proposal', icon: '📄' },
     { id: 'closed', label: 'Closed', icon: '🏆' },
   ];
-
-  const handleSelectAll = () => {
-    if (selectedLeads.length === filteredLeads.length) {
-      setSelectedLeads([]);
-    } else {
-      setSelectedLeads(filteredLeads.map(l => l._id));
-    }
-  };
-
-  const handleSingleSelect = (id) => {
-    if (selectedLeads.includes(id)) {
-      setSelectedLeads(selectedLeads.filter(leadId => leadId !== id));
-    } else {
-      setSelectedLeads([...selectedLeads, id]);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   return (
     <div className="min-h-screen p-6">
@@ -344,6 +372,7 @@ const LeadManager = () => {
         )}
       </div>
 
+      {/* Add Lead Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl w-full border border-purple-500/20">
@@ -377,13 +406,14 @@ const LeadManager = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-400 block mb-1">Email</label>
+                  <label className="text-sm text-gray-400 block mb-1">Email *</label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full bg-slate-700/50 text-white px-3 py-2 rounded-lg border border-slate-600 focus:border-purple-500 outline-none"
+                    required
                   />
                 </div>
                 <div>
@@ -413,11 +443,19 @@ const LeadManager = () => {
                 </select>
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                  Save Lead
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save Lead'}
                 </button>
               </div>
             </form>
